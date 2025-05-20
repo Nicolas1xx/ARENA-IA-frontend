@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sobre Nós - Arena Tática IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .fade-in-section { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 text-gray-100 min-h-screen flex flex-col items-center justify-center py-10 px-4 selection:bg-green-500 selection:text-slate-900">
+
+    <div class="w-full max-w-5xl p-6 sm:p-8 bg-slate-800/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-slate-700 fade-in-section">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-teal-400 to-sky-400 mb-2">
+                Sobre a Arena Tática IA
+            </h1>
+            <p class="text-slate-300 text-lg">Nossa paixão por futebol e o poder da inteligência artificial a serviço da tática.</p>
+            <nav class="mt-4">
+                <a href="index.html" class="text-green-400 hover:text-green-300 transition-colors duration-150 text-base sm:text-lg font-medium">
+                    &larr; Voltar para o Início
+                </a>
+            </nav>
+        </header>
+
+        <section class="mb-10 p-6 sm:p-8 bg-slate-700/70 backdrop-blur-sm border border-slate-600 rounded-xl shadow-xl">
+            <h2 class="text-3xl font-semibold text-sky-400 mb-4">A Ideia por Trás do Projeto</h2>
+            <p class="text-slate-300 text-base sm:text-lg leading-relaxed mb-4">
+                Olá! Eu sou o Nicolas, e minha paixão pelo futebol é algo que me move. Desde muito jovem, o campo, a bola e a estratégia do jogo sempre me fascinaram. No entanto, percebi que meu caminho não seria trilhado como jogador em campo. Foi então que descobri um amor ainda maior: o universo das formações táticas, da análise de jogo e do conhecimento profundo que envolve o esporte. Esse é o meu verdadeiro sonho no futebol.
+            </p>
+            <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+                A Arena Tática IA nasceu dessa paixão. Percebi a necessidade de uma ferramenta que pudesse auxiliar tanto entusiastas quanto profissionais a explorarem as infinitas possibilidades táticas do futebol, de forma inteligente e acessível.
+            </p>
+        </section>
+
+        <section class="mb-10 p-6 sm:p-8 bg-slate-700/70 backdrop-blur-sm border border-slate-600 rounded-xl shadow-xl">
+            <h2 class="text-3xl font-semibold text-sky-400 mb-4">Por Que Este Projeto é Útil?</h2>
+            <div class="text-slate-300 space-y-4 text-base sm:text-lg leading-relaxed">
+                <p>
+                    O futebol é um esporte de constante evolução, e a tática é seu coração. Nossa ferramenta é útil porque:
+                </p>
+                <ul class="list-disc list-inside ml-4 space-y-2">
+                    <li>
+                        <strong class="text-green-300">Geração de Esquemas Personalizados:</strong> Com base em jogadores, formação e estilo de jogo, a IA cria um esquema tático detalhado, algo que seria extremamente trabalhoso e demorado para se fazer manualmente.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Apoio à Análise e Planejamento:</strong> Permite que treinadores, analistas ou mesmo fãs visualizem e experimentem diferentes abordagens táticas de forma rápida e intuitiva.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Democratização do Conhecimento Tático:</strong> Torna o estudo e a compreensão da tática do futebol mais acessíveis, para aqueles que não são especialistas na área.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Exploração de Novas Ideias:</strong> Ao fornecer sugestões e instruções gerais, a ferramenta pode inspirar novas estratégias e otimizar o desempenho da equipe.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="p-6 sm:p-8 bg-slate-700/70 backdrop-blur-sm border border-slate-600 rounded-xl shadow-xl">
+            <h2 class="text-3xl font-semibold text-sky-400 mb-4">A Eficácia da Arena Tática IA</h2>
+            <div class="text-slate-300 space-y-4 text-base sm:text-lg leading-relaxed">
+                <p>
+                    A eficácia do nosso projeto reside na inteligência e na base tecnológica que o sustenta:
+                </p>
+                <ul class="list-disc list-inside ml-4 space-y-2">
+                    <li>
+                        <strong class="text-green-300">Inteligência Artificial Avançada:</strong> Utilizamos o modelo Gemini 2.0 Flash da Google AI, treinado para entender nuances do futebol e gerar respostas coerentes e inteligentes para as formações táticas.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Processamento de Linguagem Natural:</strong> A IA interpreta suas entradas (jogadores, formação, estilo de jogo) e as traduz em um esquema tático lógico, com posicionamento, instruções e sugestões.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Estrutura de Dados Clara:</strong> A resposta em formato JSON facilita a organização e apresentação das informações táticas de maneira estruturada e fácil de ler.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Interface Intuitiva e Visual:</strong> Além da descrição textual, a visualização no campo de futebol permite uma compreensão imediata e interativa do esquema proposto, tornando a experiência mais rica.
+                    </li>
+                    <li>
+                        <strong class="text-green-300">Capacidade de Adaptação:</strong> O modelo de IA pode se adaptar a uma vasta gama de cenários e combinações de jogadores/estilos, tornando a ferramenta flexível para diversas necessidades.
+                    </li>
+                </ul>
+                <p>
+                    A Arena Tática IA é a fusão da paixão pelo futebol com o que há de mais moderno em inteligência artificial, criando uma ferramenta poderosa para quem ama o esporte e busca aprimorar suas estratégias.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <footer class="mt-12 text-center pb-8">
+        <p class="text-slate-400 text-sm">© <span id="current-year-about"></span> Arena Tática IA. Desenvolvido por Nicolas Ricardo.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentYearSpan = document.getElementById('current-year-about');
+            if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
+        });
+    </script>
+</body>
+</html>

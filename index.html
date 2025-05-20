@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arena Tática IA - Gerador de Esquemas de Futebol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .football-pitch {
+            background: linear-gradient(45deg, #1c7430, #165924);
+        }
+        .player-marker {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 2.25rem; /* 36px */
+            height: 2.25rem; /* 36px */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.5);
+            font-size: 0.875rem; /* 14px */
+            transition: all 0.2s ease-in-out; /* Transição para hover e outros estados */
+            z-index: 10;
+            cursor: grab; /* Cursor inicial para indicar que é arrastável */
+        }
+        .player-marker.dragging {
+            transition: none !important;
+            cursor: grabbing !important;
+            z-index: 1000 !important;
+        }
+        .player-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2) translateY(-3px) !important;
+            z-index: 20;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+        }
+        .gk-marker  { background-color: #e53e3e; } .def-marker { background-color: #3b82f6; }
+        .mid-marker { background-color: #f59e0b; } .fwd-marker { background-color: #8b5cf6; }
+        .pitch-lines div:not(.player-marker) { position: absolute; background-color: rgba(255, 255, 255, 0.7); z-index: 1; }
+        .pitch-lines .line { height: 2px; }
+        .pitch-lines .halfway-line { left: 0; right: 0; top: 50%; transform: translateY(-50%); }
+        .pitch-lines .circle { border: 2px solid rgba(255, 255, 255, 0.7); background-color: transparent; border-radius: 50%; }
+        .pitch-lines .center-circle { width: 18%; padding-bottom: 18%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        .pitch-lines .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .pitch-lines .center-dot { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        .pitch-lines .penalty-area, .pitch-lines .goal-area { border: 2px solid rgba(255, 255, 255, 0.7); background-color: transparent; }
+        .pitch-lines .left-penalty-area  { top: 18%; bottom: 18%; left: 0; width: 16.5%; border-left: none; }
+        .pitch-lines .right-penalty-area { top: 18%; bottom: 18%; right: 0; width: 16.5%; border-right: none; }
+        .pitch-lines .left-goal-area  { top: 30%; bottom: 30%; left: 0; width: 7.5%; border-left: none; }
+        .pitch-lines .right-goal-area { top: 30%; bottom: 30%; right: 0; width: 7.5%; border-right: none; }
+        .pitch-lines .penalty-spot { width: 5px; height: 5px; border-radius: 50%; }
+        .pitch-lines .left-penalty-spot  { left: 11%; top: 50%; transform: translate(-50%, -50%); }
+        .pitch-lines .right-penalty-spot { right: 11%; top: 50%; transform: translate(-50%, -50%); }
+        .pitch-lines .penalty-arc { width: 18.3%; height: 36.6%; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.7); top: 50%; transform: translateY(-50%); background-color: transparent !important; z-index: 1; }
+        .pitch-lines .left-penalty-arc { left: 16.5%; transform: translateY(-50%) translateX(-50%); border-left-color: transparent; border-top-color: transparent; border-bottom-color: transparent; clip-path: inset(0 50% 0 0); }
+        .pitch-lines .right-penalty-arc { right: 16.5%; transform: translateY(-50%) translateX(50%); border-right-color: transparent; border-top-color: transparent; border-bottom-color: transparent; clip-path: inset(0 0 0 50%); }
+        .pitch-lines .corner-arc { width: 5%; padding-bottom: 5%; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.7); background-color: transparent; }
+        .pitch-lines .top-left-corner { top: -1px; left: -1px; border-bottom-color: transparent; border-right-color: transparent; }
+        .pitch-lines .bottom-left-corner { bottom: -1px; left: -1px; border-top-color: transparent; border-right-color: transparent; }
+        .pitch-lines .top-right-corner { top: -1px; right: -1px; border-bottom-color: transparent; border-left-color: transparent; }
+        .pitch-lines .bottom-right-corner { bottom: -1px; right: -1px; border-top-color: transparent; border-left-color: transparent; }
+        .pitch-lines .goal { position: absolute; top: 40%; height: 20%; width: 3%; z-index: 0; }
+        .pitch-lines .left-goal { left: -1.5%; border-right: 2px solid rgba(200,200,200,0.6); border-top: 2px solid rgba(200,200,200,0.6); border-bottom: 2px solid rgba(200,200,200,0.6); background-color: transparent !important;}
+        .pitch-lines .right-goal { right: -1.5%; border-left: 2px solid rgba(200,200,200,0.6); border-top: 2px solid rgba(200,200,200,0.6); border-bottom: 2px solid rgba(200,200,200,0.6); background-color: transparent !important;}
+        .treinadores-scrollbar::-webkit-scrollbar { width: 8px; }
+        .treinadores-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .treinadores-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .treinadores-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .fade-in-section { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden-initially { opacity: 0; display: none; }
+        .shown { display: block !important; opacity: 1 !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 text-gray-100 min-h-screen flex flex-col items-center justify-center py-10 px-4 selection:bg-green-500 selection:text-slate-900">
+
+    <div class="w-full max-w-5xl p-6 sm:p-8 bg-slate-800/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-slate-700">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-teal-400 to-sky-400 mb-2">
+                Arena Tática IA
+            </h1>
+            <p class="text-slate-300 text-lg">Crie e explore esquemas táticos de futebol com o poder da IA.</p>
+        </header>
+
+        <!-- MODIFICAÇÃO AQUI: Adicionado md:grid-cols-2 lg:grid-cols-4 para melhor layout -->
+        <div id="formulario" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div>
+                <!-- MODIFICAÇÃO: Label ajustado -->
+                <label for="nome-jogadores" class="block mb-2 text-sm font-medium text-green-400">Jogadores (Personalizado)</label>
+                <input
+                    id="nome-jogadores"
+                    type="text"
+                    class="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-200 placeholder-slate-400 transition-colors duration-150"
+                    placeholder="Ex: Goleiro,Zagueiro,Lateral..."
+                >
+            </div>
+            <!-- NOVO CAMPO ADICIONADO -->
+            <div>
+                <label for="jogadores-predefinidos-select" class="block mb-2 text-sm font-medium text-green-400">Carregar Time Predefinido</label>
+                <select
+                    id="jogadores-predefinidos-select"
+                    class="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-200 transition-colors duration-150 appearance-none"
+                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 0.65em auto;"
+                >
+                    <option value=""> Digite ou Selecione </option>
+<option value="GOL,LD,ZAG D,ZAG E,LE,VOL,MC D,MC E,MEI,ATA D,ATA E">Time Padrão (Posições)</option>
+<option value="Courtois,Carvajal,Rüdiger,Militão,Mendy,Valverde,Tchouaméni,Bellingham,Rodrygo,Vini Jr.,Mbappé">Real Madrid (24/25)</option>
+<option value="Ter Stegen,Koundé,Araújo,Cubarsí,Cancelo,Gündoğan,De Jong,Pedri,Lamine Yamal,Lewandowski,Raphinha">Barcelona (24/25)</option>
+<option value="Ederson,Walker,Stones,Dias,Gvardiol,Rodri,De Bruyne,Bernardo Silva,Foden,Haaland,Doku">Man City (24/25)</option>
+<option value="Alisson,Alexander-Arnold,Konaté,Van Dijk,Robertson,Endo,Mac Allister,Szoboszlai,Salah,Núñez,Díaz">Liverpool (24/25)</option>
+<option value="Neuer,Kimmich,De Ligt,Dier,Guerreiro,Pavlović,Goretzka,Sané,Musiala,Coman,Kane">Bayern Munique (24/25)</option>
+<option value="Donnarumma,Hakimi,Marquinhos,Beraldo,Nuno Mendes,Ugarte,Vitinha,Zaïre-Emery,Dembélé,Gonçalo Ramos,Barcola">PSG (24/25)</option>
+<option value="Rossi,Varela,Fabrício Bruno,Léo Pereira,Ayrton Lucas,Erick Pulgar,De la Cruz,Arrascaeta,Luiz Araújo,Pedro,Everton Cebolinha">Flamengo (2024)</option>
+<option value="Weverton,Rocha,Gómez,Murilo,Piquerez,Aníbal Moreno,Richard Ríos,Veiga,Estêvão,Flaco López,Lázaro">Palmeiras (2024)</option>
+<option value="Hugo Souza,Angilieri,Félix Torres,Cacá,Matheuzinho,Raniele,Breno Bidon,Garro,Depay,Yuri Alberto,Carrijo">Corinthians (2024)</option>
+<option value="Bento,Léo Godoy,Kaique Rocha,Thiago Heleno,Esquivel,Fernandinho,Erick,Zapelli,Canobbio,Cuello,Mastriani">Athletico-PR (2024)</option>
+                </select>
+            </div>
+            <!-- FIM DO NOVO CAMPO -->
+            <div>
+                <label for="formacao" class="block mb-2 text-sm font-medium text-green-400">Formação Desejada</label>
+                <select
+                    id="formacao"
+                    class="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-200 transition-colors duration-150 appearance-none"
+                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 0.65em auto;"
+                >
+                    <option value="" class="text-slate-400">Selecione uma Tática</option>
+                    <option value="4-4-2">4-4-2</option>
+                    <option value="4-3-3">4-3-3</option>
+                    <option value="3-5-2">3-5-2</option>
+                    <option value="4-2-3-1">4-2-3-1</option>
+                    <option value="5-3-2">5-3-2</option>
+                    <option value="4-1-4-1">4-1-4-1</option>
+                    <option value="3-4-3">3-4-3</option>
+                </select>
+            </div>
+            <div>
+                <label for="estilo-jogo" class="block mb-2 text-sm font-medium text-green-400">Estilo de Jogo</label>
+                <input
+                    id="estilo-jogo"
+                    type="text"
+                    class="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-slate-200 placeholder-slate-400 transition-colors duration-150"
+                    placeholder="Ex: Tiki-taka, Defensivo..."
+                >
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center items-center mt-8 space-y-3 sm:space-y-0 sm:space-x-4">
+            <button
+                id="saber-mais-btn"
+                class="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                <span>Grandes Técnicos</span>
+            </button>
+            <button
+                id="gerar-esquema-btn"
+                class="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-150 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11.906 2.094a8.001 8.001 0 00-8.482 1.06L2.19 4.388a1 1 0 00-.22.29l-1.14 2.28a1 1 0 00.29 1.369l.01.005 1.82 1.213A1.002 1.002 0 004 9.462l.694-.069a1 1 0 00.852-.694l.07-.278a6.001 6.001 0 019.64-1.878l.278.07a1 1 0 00.922-.158l1.213-1.82.005.01a1 1 0 00.29-1.369l-1.14-2.28a1 1 0 00-.22-.29l-1.224-1.234A7.95 7.95 0 0011.906 2.094zM10 4a6 6 0 100 12 6 6 0 000-12zM3.169 9.725L4.38 7.81l-.07.278a1 1 0 00.694.852l.278.07a8.001 8.001 0 00-1.06 8.482l-1.234 1.224a1 1 0 00-.29.22l-2.28 1.14a1 1 0 00-1.369-.29l-.005-.01-1.213-1.82a1.002 1.002 0 00-1.538-.177L.538 16l.069-.694a1 1 0 00-.694-.852l-.278-.07a6 6 0 011.878-9.64l.07-.278a1 1 0 00.158-.922L.177 2.462l.01-.005a1 1 0 001.369-.29l2.28 1.14a1 1 0 00.29.22L5.612 4.81a8.002 8.002 0 008.482 1.06l1.234-1.224a1 1 0 00.22-.29l1.14-2.28a1 1 0 00-.29-1.369l-.01-.005-1.82-1.213a1 1 0 00-1.538.177l-.694.069a1 1 0 00-.852.694l-.07.278A6.001 6.001 0 013.169 9.725z" /></svg>
+                <span>Gerar Esquema</span>
+            </button>
+            <button
+                id="limpar-campos-btn"
+                class="w-full sm:w-auto bg-slate-600 hover:bg-slate-700 text-slate-300 font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                <span>Limpar Campos</span>
+            </button>
+            <button
+                id="sobre-btn"
+                onclick="window.location.href='sobre.html'"
+                class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                </svg>
+                <span>Sobre o Projeto</span>
+            </button>
+        </div>
+
+        <div id="info-treinadores-secao" class="mt-12 hidden-initially">
+            <div class="bg-slate-700/70 backdrop-blur-sm border border-slate-600 rounded-xl shadow-xl p-6 sm:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-semibold text-sky-400">Mestres da Tática: Filosofias que Moldaram o Futebol</h2>
+                    <button id="fechar-info-treinadores-btn" title="Fechar" class="text-slate-400 hover:text-sky-300 transition-colors p-1.5 rounded-full hover:bg-slate-600/70">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div id="lista-treinadores-container" class="space-y-6 max-h-[60vh] overflow-y-auto treinadores-scrollbar pr-2 sm:pr-3">
+                    <p class="text-center text-slate-400">Carregando informações dos treinadores...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="response" class="mt-12 hidden-initially">
+            <!-- Conteúdo da resposta do esquema tático -->
+        </div>
+
+        <div id="campo-esquema" class="mt-12 hidden-initially">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center text-green-400 mb-6">Visualização do Esquema Tático</h2>
+            <div class="relative football-pitch p-1 sm:p-2 rounded-xl shadow-2xl w-full max-w-3xl mx-auto aspect-[3/2] border-2 border-white/20">
+                <div class="pitch-lines relative w-full h-full border-2 border-white/70">
+                    <div class="line halfway-line"></div>
+                    <div class="circle center-circle"></div>
+                    <div class="dot center-dot"></div>
+                    <div class="penalty-area left-penalty-area"></div>
+                    <div class="goal-area left-goal-area"></div>
+                    <div class="penalty-spot left-penalty-spot"></div>
+                    <div class="penalty-arc left-penalty-arc"></div>
+                    <div class="corner-arc top-left-corner"></div>
+                    <div class="corner-arc bottom-left-corner"></div>
+                    <div class="goal left-goal"></div>
+                    <div class="penalty-area right-penalty-area"></div>
+                    <div class="goal-area right-goal-area"></div>
+                    <div class="penalty-spot right-penalty-spot"></div>
+                    <div class="penalty-arc right-penalty-arc"></div>
+                    <div class="corner-arc top-right-corner"></div>
+                    <div class="corner-arc bottom-right-corner"></div>
+                    <div class="goal right-goal"></div>
+
+                    <div id="jogador1"  class="player-marker gk-marker">1</div>
+                    <div id="jogador2"  class="player-marker def-marker">2</div>
+                    <div id="jogador3"  class="player-marker def-marker">3</div>
+                    <div id="jogador4"  class="player-marker def-marker">4</div>
+                    <div id="jogador5"  class="player-marker def-marker">5</div>
+                    <div id="jogador6"  class="player-marker mid-marker">6</div>
+                    <div id="jogador7"  class="player-marker mid-marker">7</div>
+                    <div id="jogador8"  class="player-marker mid-marker">8</div>
+                    <div id="jogador9"  class="player-marker fwd-marker">9</div>
+                    <div id="jogador10" class="player-marker fwd-marker">10</div>
+                    <div id="jogador11" class="player-marker fwd-marker">11</div>
+                </div>
+            </div>
+            <p class="text-center mt-4 text-sm text-slate-400">Passe o mouse sobre os jogadores para destacá-los.</p>
+        </div>
+    </div>
+
+    <footer class="mt-12 text-center pb-8">
+        <p class="text-slate-400 text-sm">© <span id="current-year"></span> Arena Tática IA. Desenvolvido por Nicolas Ricardo.</p>
+    </footer>
+
+    <script src="./script.js"></script>
+</body>
+</html>
