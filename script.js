@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSection(campoEsquemaContainer, false);
 
         try {
-            const res = await fetch('http://127.0.0.1:5000/esquema', {
+            const res = await fetch('https://arena-ia-backend.vercel.app/esquema', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
